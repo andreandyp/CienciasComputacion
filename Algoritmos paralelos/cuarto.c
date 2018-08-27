@@ -6,7 +6,7 @@
 	#define FALSE 0
 #else
 	#define omp_get_thread_num() 0
-	#define omp_get_num_threads 1
+	#define omp_get_num_threads() 1
 #endif
 
 #define N 24
@@ -19,6 +19,7 @@ int main (int argc, char* argv[]){
 		A[i] = 0;
 	}
 
+	omp_set_num_threads(3);
 	#pragma omp parallel private(tid)
 	{
 		nthr = omp_get_num_threads();
@@ -29,7 +30,7 @@ int main (int argc, char* argv[]){
 	}
 
 	for (int i = 0; i < N; ++i){
-		printf("A(%d) = %d\n", i, A[i]);
+		//printf("A(%d) = %d\n", i, A[i]);
 	}
 
 	return 0;

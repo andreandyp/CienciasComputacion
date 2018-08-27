@@ -3,6 +3,7 @@
 
 int main (int argc, char* argv[]){
 	int iam = 0, np = 1, i = 0;
+	omp_set_num_threads(3);
 	#pragma omp parallel private(iam, np, i)
 	{
 		#if defined (_OPENMP)
@@ -15,5 +16,5 @@ int main (int argc, char* argv[]){
 				printf("Hilo %d, contador: %d\n", iam, i);
 			}
 	}
-	//return 0;
+	return 0;
 }
