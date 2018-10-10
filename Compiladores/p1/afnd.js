@@ -13,30 +13,67 @@ if(!process.argv[3]){
 const ruta = process.argv[2];
 const cadena = process.argv[3].split("");
 const archivo = (fs.readFileSync(ruta)).toString().split(/\r\n/);
-const automata = iniciarAutomata(archivo);
+const automata = crearAutomata(archivo);
 
-const estadosRecorridos = [];
-let estadoActual = automata.inicial;
-estadosRecorridos.push(estadoActual);
+const caminosRecorridos = [];
+caminosRecorridos.push({ recorrido: [automata.inicial], actual: automata.inicial, errores: [] });
 
 cadena.forEach(simbolo => {
-	//Buscar entre todas las transiciones que corresponden con nuestro estado actual
-	let transiciones = automata.transiciones.filter(trans => trans.actual === estadoActual);
+	let nuevosCaminos = [];
+	for(let camino of caminosRecorridos){
+		//Buscar entre todas las transiciones aquellas que correspondan con el estado actual
+		//de nuestro camino actual y nuestro simbolo actual
+		let transiciones = automata.transiciones.filter(trans => {
+			return trans.actual === camino.actual && trans.simbolo === simbolo
+		});
 
-	//Buscar aquella transición que incluye a nuestro símbolo actual
-	let transicion = transiciones.find(trans => trans.simbolo === simbolo);
+		if (transiciones.length === 0) {
+			//Agregar el error a nuestro camino
+			camino.errores.push({ estado: camino.actual, simbolo });
+			//Ir al siguiente camino recorrido
+			//Si es el último camino recorrido, entonces ir al siguiente símbolo
+			continue;
+		}
 
-	//Establecer nuevo estado actual
-	estadoActual = transicion.siguiente;
+		//Si hay sólo una transición, actualizar el camino actual
+		if(transiciones === 1){
+			camino.actual = transiciones[0].siguiente;
+			camino.recorrido.push(camino.actual);
+		}
+		//Si no, crear nuevos caminos...
+		else{
+			for (let i = 1; i < transiciones.length; i++) {
+				//... con base en el camino actual...
+				let nuevoCamino = {
+					recorrido: [...camino.recorrido],
+					actual: camino.actual,
+					errores: [...camino.errores]};
 
-	//Agregar el estado actual a la lista de estados recorridos
-	estadosRecorridos.push(estadoActual);
+				nuevoCamino.actual = transiciones[i].siguiente;
+				nuevoCamino.recorrido.push(nuevoCamino.actual);
+				nuevosCaminos.push(nuevoCamino);
+			}
+			//... y actualizar el camino actual
+			camino.actual = transiciones[0].siguiente;
+			camino.recorrido.push(camino.actual);
+		}
+	}
+
+	//Añadir los nuevos caminos al finalizar de recorrer todos los caminos con el símbolo actual
+	caminosRecorridos.push(...nuevosCaminos);
 });
 
-console.log("Fin. Estados recorridos: ");
-console.log(estadosRecorridos);
+console.log("\nFin. Estados recorridos: ");
+caminosRecorridos.forEach(camino => {
+	console.log("\nCamino:");
+	console.log(camino.recorrido);
+	//Imprimir errores
+	camino.errores.forEach(error => {
+		console.log(`Error en ${error.estado} con el símbolo ${error.simbolo}`);
+	});
+})
 
-function iniciarAutomata(archivo){
+function crearAutomata(archivo){
 	//Obtener estados
 	const estados = [];
 	archivo[0].split(",").forEach(elem => {
@@ -45,7 +82,7 @@ function iniciarAutomata(archivo){
 
 	//Obtener alfabeto
 	const alfabeto = [];
-	archivo[1].split("").forEach(elem => {
+	archivo[1].split(",").forEach(elem => {
 		alfabeto.push(elem);
 	});
 
@@ -68,5 +105,25 @@ function iniciarAutomata(archivo){
 		transiciones.push({ actual, simbolo, siguiente });
 	}
 
-	return { estados, alfabeto, inicial, finales, transiciones }
+	//Completar transiciones
+	const nuevasTransiciones = [];
+	//Añadir estado de error
+	estados.push("\u274c");
+	estados.forEach(estado => {
+		alfabeto.forEach(simbolo => {
+			//Iterar a través del alfabeto y buscar si existe una transición para el estado actual con el símbolo actual
+			let validas = transiciones.filter(trans => trans.simbolo === simbolo && trans.actual === estado);
+			//Si no existe esa o esas transiciones, agregar una al estado de error
+			if(validas < 1){
+				nuevasTransiciones.push({ actual: estado, simbolo, siguiente: "\u274c"});
+			}
+		});
+	});
+
+	console.log("Transiciones agregadas: ");
+	nuevasTransiciones.forEach(trans => console.log(trans));
+	transiciones.push(...nuevasTransiciones);
+
+	//Formar quintupla con la información del archivo
+	return { estados, alfabeto, inicial, finales, transiciones };
 }
