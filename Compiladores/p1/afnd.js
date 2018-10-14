@@ -12,7 +12,7 @@ if(!process.argv[3]){
 
 const ruta = process.argv[2];
 const cadena = process.argv[3].split("");
-const archivo = (fs.readFileSync(ruta)).toString().split(/\r\n/);
+const archivo = (fs.readFileSync(ruta)).toString().split(/\r?\n/);
 const automata = crearAutomata(archivo);
 
 const caminosRecorridos = [];
@@ -63,14 +63,18 @@ cadena.forEach(simbolo => {
 	caminosRecorridos.push(...nuevosCaminos);
 });
 
-console.log("\nFin. Estados recorridos: ");
+console.log(`\nFin, se recorrieron ${caminosRecorridos.length} camino(s)`);
 caminosRecorridos.forEach(camino => {
-	console.log("\nCamino:");
-	console.log(camino.recorrido);
-	//Imprimir errores
-	camino.errores.forEach(error => {
-		console.log(`Error en ${error.estado} con el símbolo ${error.simbolo}`);
-	});
+	const ultimoEstado = camino.recorrido[camino.recorrido.length - 1];
+	if(automata.finales.includes(ultimoEstado)){
+		console.log("\nCadena aceptada:");
+		console.log(camino.recorrido);
+		//Imprimir errores
+		camino.errores.forEach(error => {
+			console.log(`Error en el estado ${error.estado} con el símbolo ${error.simbolo}`);
+		});
+	}
+	
 })
 
 function crearAutomata(archivo){
