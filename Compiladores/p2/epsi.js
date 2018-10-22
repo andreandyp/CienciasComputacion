@@ -1,12 +1,7 @@
 const fs = require("fs");
 
-if(!process.argv[2]){
+if (!process.argv[2]) {
 	console.error("Falta la ruta del archivo");
-	process.exit(-1);
-}
-
-if(!process.argv[3]){
-	console.error("Falta la cadena a probar");
 	process.exit(-1);
 }
 
@@ -16,68 +11,88 @@ const archivo = (fs.readFileSync(ruta)).toString().split(/\r?\n/);
 const automata = crearAutomata(archivo);
 
 const caminosRecorridos = [];
-caminosRecorridos.push({ recorrido: [automata.inicial], actual: automata.inicial, errores: [] });
+caminosRecorridos.push({ 
+	recorrido: [automata.inicial], 
+	actual: automata.inicial, 
+	errores: [],
+	indiceActual: 0 });
 
-cadena.forEach(simbolo => {
+while (!caminosRecorridos.every(hue)) {
 	let nuevosCaminos = [];
-	for(let camino of caminosRecorridos){
-		//Buscar entre todas las transiciones aquellas que correspondan con el estado actual
-		//de nuestro camino actual y nuestro simbolo actual
-		let transiciones = automata.transiciones.filter(trans => {
+	for (let i = 0; i < caminosRecorridos.length; i++) {
+		let camino = caminosRecorridos[i];
+		let simbolo = cadena[camino.indiceActual];
+
+		let transSigma = automata.transiciones.find(trans => {
 			return trans.actual === camino.actual && trans.simbolo === simbolo;
 		});
 
-		if (transiciones.length === 0) {
-			//Agregar el error a nuestro camino
-			camino.errores.push({ estado: camino.actual, simbolo });
-			//Ir al siguiente camino recorrido
-			//Si es el último camino recorrido, entonces ir al siguiente símbolo
+		let transEpsi = automata.transiciones.filter(trans => {
+			return trans.actual === camino.actual && trans.simbolo === "E";
+		});
+
+		//Hay transición con el elemento actual
+		if(transSigma){
+			camino.actual = transSigma.siguiente;
+			camino.recorrido.push(camino.actual);
+			++camino.indiceActual;
 			continue;
 		}
 
-		//Si hay sólo una transición, actualizar el camino actual
-		if(transiciones === 1){
+		//No hay, intentar con epsilon
+		//Si no hay transiciones con epsilon
+		if(transEpsi.length === 0){
+			if(!automata.finales.includes(camino.actual)){
+				caminosRecorridos.splice(i, 1);
+			}
+			continue;
+		}
+
+		//Hay transicion con epsilon
+		if (transEpsi === 1) {
 			camino.actual = transiciones[0].siguiente;
 			camino.recorrido.push(camino.actual);
 		}
 		//Si no, crear nuevos caminos...
-		else{
-			for (let i = 1; i < transiciones.length; i++) {
+		else {
+			for (let i = 1; i < transEpsi.length; i++) {
 				//... con base en el camino actual...
 				let nuevoCamino = {
 					recorrido: [...camino.recorrido],
 					actual: camino.actual,
-					errores: [...camino.errores]};
+					errores: [...camino.errores]
+				};
 
-				nuevoCamino.actual = transiciones[i].siguiente;
+				nuevoCamino.actual = transEpsi[i].siguiente;
 				nuevoCamino.recorrido.push(nuevoCamino.actual);
+				nuevoCamino.indiceActual = camino.indiceActual;
 				nuevosCaminos.push(nuevoCamino);
 			}
 			//... y actualizar el camino actual
-			camino.actual = transiciones[0].siguiente;
+			camino.actual = transEpsi[0].siguiente;
 			camino.recorrido.push(camino.actual);
 		}
+
+
+
+
+
+		//Se acabó la cadena (no símbolo)
+		//Probar con epsilon
+		//Símbolo no pertenece al alfabeto
+
+
 	}
 
-	//Añadir los nuevos caminos al finalizar de recorrer todos los caminos con el símbolo actual
-	caminosRecorridos.push(...nuevosCaminos);
-});
+	caminosRecorridos.push(...nuevosCaminos);	
+}
 
 console.log(`\nFin, se recorrieron ${caminosRecorridos.length} camino(s)`);
 caminosRecorridos.forEach(camino => {
-	const ultimoEstado = camino.recorrido[camino.recorrido.length - 1];
-	if(automata.finales.includes(ultimoEstado)){
-		console.log("\nCadena aceptada:");
-		console.log(camino.recorrido);
-		//Imprimir errores
-		camino.errores.forEach(error => {
-			console.log(`Error en el estado ${error.estado} con el símbolo ${error.simbolo}`);
-		});
-	}
-	
+	console.log(camino);
 })
 
-function crearAutomata(archivo){
+function crearAutomata(archivo) {
 	//Obtener estados
 	const estados = [];
 	archivo[0].split(",").forEach(elem => {
@@ -109,6 +124,7 @@ function crearAutomata(archivo){
 		transiciones.push({ actual, simbolo, siguiente });
 	}
 
+	/*
 	//Completar transiciones
 	const nuevasTransiciones = [];
 	//Añadir estado de error
@@ -118,16 +134,20 @@ function crearAutomata(archivo){
 			//Iterar a través del alfabeto y buscar si existe una transición para el estado actual con el símbolo actual
 			let validas = transiciones.filter(trans => trans.simbolo === simbolo && trans.actual === estado);
 			//Si no existe esa o esas transiciones, agregar una al estado de error
-			if(validas < 1){
-				nuevasTransiciones.push({ actual: estado, simbolo, siguiente: "\u274c"});
+			if (validas < 1) {
+				nuevasTransiciones.push({ actual: estado, simbolo, siguiente: "\u274c" });
 			}
 		});
 	});
 
 	console.log("Transiciones agregadas: ");
 	nuevasTransiciones.forEach(trans => console.log(trans));
-	transiciones.push(...nuevasTransiciones);
+	transiciones.push(...nuevasTransiciones);*/
 
 	//Formar quintupla con la información del archivo
 	return { estados, alfabeto, inicial, finales, transiciones };
+}
+
+function hue(elemento) {
+	return automata.finales.includes(elemento.actual);
 }
