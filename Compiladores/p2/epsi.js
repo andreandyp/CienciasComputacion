@@ -66,7 +66,6 @@ while (!caminosRecorridos.every(estaEnEstadoFinal)) {
 
 		//Hay UNA transición con épsilon, actualizar el camino actual
 		if (transEpsi.length === 1) {
-			console.log(transEpsi);
 			camino.actual = transEpsi[0].siguiente;
 			camino.recorrido.push(camino.actual);
 		}
