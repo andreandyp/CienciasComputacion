@@ -1,6 +1,9 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+
+char* cadconcat(char* cad1, char* cad2, int tam);
+int cadlen(char* cad);
 %}
 
 %union{
@@ -33,6 +36,7 @@ input:
 line: TOK_LF
     | expE TOK_LF { printf("\tResultado: %d\n", $1); }
     | expD TOK_LF { printf("\tResultado: %f\n", $1); }
+    | concatenacion TOK_LF { printf("\tResultado: %s\n", $1); }
     ;
 
 expE: TOK_ENTERO { $$ = $1; }
@@ -44,22 +48,29 @@ expE: TOK_ENTERO { $$ = $1; }
 
 concatenacion: TOK_CADENA { $$ = $1; }
     | concatenacion TOK_SUMA concatenacion {
-        int i = 0, j = 0;
-        char* cad = malloc(len($1)+len($3) - 1);
-        while($1[i]){
-            cad[j] = $1[i];
-            j++;
-            i++;
-        }
-
-        i = 0;
-        while($3[i]){
-            cad[j] = $3[i];
-            j++;
-            i++;
-        }
-
-        cad[j] = '\0';
+        int nuevaLen = cadlen($1)+cadlen($3) - 1;
+        char* cad = cadconcat($1, $3, nuevaLen);
+        $$ = cad;
+    }
+    | concatenacion TOK_SUMA expE {
+        char numcad[21];
+        sprintf(numcad, "%d", $3);
+        int nuevaLen = cadlen($1)+cadlen(numcad) - 1;
+        char* cad = cadconcat($1, numcad, nuevaLen);
+        $$ = cad;
+    }
+    | expE TOK_SUMA concatenacion {
+        char numcad[21];
+        sprintf(numcad, "%d", $1);
+        int nuevaLen = cadlen($3)+cadlen(numcad) - 1;
+        char* cad = cadconcat(numcad, $3, nuevaLen);
+        $$ = cad;
+    }
+    | expD TOK_SUMA concatenacion {
+        char numcad[21];
+        sprintf(numcad, "%f", $1);
+        int nuevaLen = cadlen($3)+cadlen(numcad) - 1;
+        char* cad = cadconcat(numcad, $3, nuevaLen);
         $$ = cad;
     }
     ;
@@ -106,4 +117,26 @@ int cadlen(char* cad){
     }
 
     return len;
+}
+
+char* cadconcat(char* cad1, char* cad2, int tam){
+    int i = 0, j = 0;
+    char* concatenada = malloc(tam);
+
+    while(cad1[i]){
+        concatenada[j] = cad1[i];
+        j++;
+        i++;
+    }
+
+    i = 0;
+    while(cad2[i]){
+        concatenada[j] = cad2[i];
+        j++;
+        i++;
+    }
+
+    concatenada[j] = '\0';   
+
+    return concatenada;
 }

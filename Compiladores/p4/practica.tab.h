@@ -61,7 +61,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 6 "practica.y" /* yacc.c:1909  */
+#line 9 "practica.y" /* yacc.c:1909  */
 
 	int entero;
     double decimal;

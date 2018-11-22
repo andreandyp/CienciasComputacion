@@ -25,7 +25,7 @@ cadena \"[^\"]+\"
 {cadena} {
 	printf("Cadena de texto\n");
 	int i = 0;
-	char* cadena = malloc(256);
+	char* cadena = malloc(cadlen(yytext));
 	while(yytext[i + 2]){
 		cadena[i] = yytext[i+1];
 		i++;
