@@ -46,11 +46,13 @@ extern int yydebug;
   enum yytokentype
   {
     TOK_ENTERO = 258,
-    TOK_SUMA = 259,
-    TOK_RESTA = 260,
-    TOK_MULTI = 261,
-    TOK_DIV = 262,
-    TOK_LF = 263
+    TOK_DECIMAL = 259,
+    TOK_CADENA = 260,
+    TOK_SUMA = 261,
+    TOK_RESTA = 262,
+    TOK_MULTI = 263,
+    TOK_DIV = 264,
+    TOK_LF = 265
   };
 #endif
 
@@ -62,8 +64,10 @@ union YYSTYPE
 #line 6 "practica.y" /* yacc.c:1909  */
 
 	int entero;
+    double decimal;
+    char* cadena;
 
-#line 67 "practica.tab.h" /* yacc.c:1909  */
+#line 71 "practica.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
