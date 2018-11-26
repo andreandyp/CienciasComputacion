@@ -56,5 +56,9 @@ cadena \"[^\"]+\"
 	printf("Operador\n");
 	return TOK_DIV;
 }
+\^ {
+	printf("Operador\n");
+	return TOK_EXP;
+}
 
 .	;

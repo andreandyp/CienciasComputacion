@@ -19,10 +19,12 @@ int cadlen(char* cad);
 %token TOK_RESTA
 %token TOK_MULTI
 %token TOK_DIV
+%token TOK_EXP
 %token TOK_LF
 
 %left TOK_SUMA TOK_RESTA
 %left TOK_MULTI TOK_DIV
+%left TOK_EXP
 
 %type <entero> expE
 %type <decimal> expD
@@ -72,7 +74,7 @@ concatenacion: TOK_CADENA { $$ = $1; }
         char* cad = concatenarStr(numcad, $3, nuevaLen);
         $$ = cad;
     }
-    | expE TOK_MULTI concatenacion {
+    | expE TOK_EXP concatenacion {
         int nuevaLen = cadlen($3)*$1 + 1;
         char* original = $3;
         char* cad = "";
@@ -85,8 +87,9 @@ concatenacion: TOK_CADENA { $$ = $1; }
 
         $$ = cad;
     }
-    | concatenacion TOK_MULTI expE {
-        int nuevaLen = cadlen($1)*$3 + 1;
+    | concatenacion TOK_EXP expE {
+        int entero = ($3 < 0 ? -$3 : $3);
+        int nuevaLen = cadlen($1)*entero + 1;
         char* original = $1;
         char* cad = "";
         int i = 0;
@@ -94,7 +97,11 @@ concatenacion: TOK_CADENA { $$ = $1; }
             cad = concatenarStr(cad, original, nuevaLen);
             ++i;
         }
-        while(i < $3);
+        while(i < entero);
+
+        if($3 < 0){
+            cad = voltearStr(cad, cadlen(cad));
+        }
 
         $$ = cad;
     }
