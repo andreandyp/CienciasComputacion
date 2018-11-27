@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 char* concatenarStr(char* cad1, char* cad2, int tam);
 char* voltearStr(char* cadena, int tam);
@@ -44,6 +45,7 @@ line: TOK_LF
 
 expE: TOK_ENTERO { $$ = $1; }
     | TOK_RESTA expE { $$ = -$2; }
+    | TOK_SUMA expE { $$ = $2; }
     | expE TOK_SUMA expE { $$ = $1 + $3; }
     | expE TOK_RESTA expE { $$ = $1 - $3; }
     | expE TOK_MULTI expE { $$ = $1 * $3; }
@@ -56,21 +58,21 @@ concatenacion: TOK_CADENA { $$ = $1; }
         $$ = cad;
     }
     | concatenacion TOK_SUMA concatenacion {
-        int nuevaLen = cadlen($1)+cadlen($3) - 1;
+        int nuevaLen = cadlen($1)+cadlen($3) + 1;
         char* cad = concatenarStr($1, $3, nuevaLen);
         $$ = cad;
     }
     | concatenacion TOK_SUMA expE {
         char numcad[21];
         sprintf(numcad, "%d", $3);
-        int nuevaLen = cadlen($1)+cadlen(numcad) - 1;
+        int nuevaLen = cadlen($1)+cadlen(numcad) + 1;
         char* cad = concatenarStr($1, numcad, nuevaLen);
         $$ = cad;
     }
     | expE TOK_SUMA concatenacion {
         char numcad[21];
         sprintf(numcad, "%d", $1);
-        int nuevaLen = cadlen($3)+cadlen(numcad) - 1;
+        int nuevaLen = cadlen($3)+cadlen(numcad) + 1;
         char* cad = concatenarStr(numcad, $3, nuevaLen);
         $$ = cad;
     }
@@ -123,6 +125,8 @@ expD: TOK_DECIMAL { $$ = $1; }
     | expD TOK_RESTA expE { $$ = $1 - $3; }
     | expD TOK_MULTI expE { $$ = $1 * $3; }
     | expD TOK_DIV expE { $$ = $1 / $3; }
+
+
     ;
 
 %%
