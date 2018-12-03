@@ -26,34 +26,82 @@ const afd = {
 
 let codigoEstado = 65;
 
-afd.estados.push({ 
+let inicial = {
 	simbolo: String.fromCharCode(codigoEstado),
 	estadosThompson: (cerraduraE([automata.inicial], automata.transiciones)).ordenar(),
 	letra: []
-});
+};
+afd.estados.push(inicial);
+afd.inicial = inicial.simbolo;
 
-
+//Recorrer cada nuevo estado que vaya apareciendo
 for(let estado of afd.estados){
-	for(let simbolo of afd.alfabeto){
-		let nuevoEstado = irA(estado.estadosThompson, simbolo, automata.transiciones);
+	//Y ejecutando irA() con cada letra del alfabeto
+	for(let letra of afd.alfabeto){
+		let nuevoEstado = irA(estado.estadosThompson, letra, automata.transiciones);
+		//Ordenar ascendentemente los estados (convierte el Set a arreglo)
 		nuevoEstado = nuevoEstado.ordenar();
 
-		let similares = afd.estados.filter(estado => compararSets(nuevoEstado, estado.estadosThompson));
-		if(similares.length === 0){
-			estado.letra.push(simbolo);
-			afd.estados.push({
+		//Buscar si ya existe ese estado
+		let iguales = afd.estados.filter(estado => compararSets(nuevoEstado, estado.estadosThompson));
+
+		//Si no existe...
+		if(iguales.length === 0){
+			//Agregar la letra del alfabeto al estado actual
+			//para saber con qué letras tiene transición.
+			//Sólo es con el propósito de depurar
+			estado.letra.push(letra);
+			let estadoAFD = {
 				simbolo: String.fromCharCode(++codigoEstado),
 				estadosThompson: nuevoEstado,
 				letra: []
+			};
+
+			afd.transiciones.push({
+				actual: estado.simbolo,
+				letra,
+				siguiente: estadoAFD.simbolo
 			});
+
+			//Si tiene algún estado que forme parte de los estados finales del ANFD-E...
+			//Entonces agregarlo a los estados finales del AFD
+			for (let final of automata.finales) {
+				if (nuevoEstado.includes(final)) {
+					afd.finales.push(estadoAFD.simbolo);
+				}
+			}
+
+			//Añadir a la lista de estados
+			afd.estados.push(estadoAFD);
 		}
+		//Si sí existe...
 		else{
-			if(similares[0].simbolo !== "-"){
-				estado.letra.push(simbolo);
+			//Y no es el estado vacío...
+			if(iguales[0].simbolo !== "-"){
+				//Crear una nueva transición
+				afd.transiciones.push({
+					actual: estado.simbolo,
+					letra,
+					siguiente: iguales[0].simbolo
+				});
+
+				//Y también añadir el símbolo actual al estado actual
+				estado.letra.push(letra);
 			}
 		}
 	}
 }
+
+//Nota: es hora de aprender a usar util.format()
+console.log("Estados: ");
+for (let estado of afd.estados) {
+	console.log(`${estado.simbolo} (${estado.estadosThompson})`)
+}
+console.log(`Alfabeto: [${afd.alfabeto.join(", ")}]`);
+console.log(`Inicial: ${afd.inicial}`);
+console.log(`Estados finales: [${afd.finales.join(", ")}]`);
+console.log("Transiciones: ");
+console.log(afd.transiciones);
 
 function cerraduraE(estados, transiciones) {
 	let resultado = new Set([...estados]);
