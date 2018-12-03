@@ -2,3 +2,4 @@
 *.tab.h
 /node_modules/
 practica
+*.yy.c

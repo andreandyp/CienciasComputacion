@@ -7,7 +7,7 @@
 digito [0-9]
 decimal {digito}*\.{digito}+
 entero {digito}+
-cadena \"[^\"]+\"
+cadena \"[^\"]*\"
 %%
 
 {decimal} {
