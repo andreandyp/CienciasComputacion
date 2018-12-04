@@ -93,10 +93,11 @@ for(let estado of afd.estados){
 }
 
 //Nota: es hora de aprender a usar util.format()
-console.log("Estados: ");
-for (let estado of afd.estados) {
-	console.log(`${estado.simbolo} (${estado.estadosThompson})`)
+let est = [];
+for(let i = 1; i < afd.estados.length; i++){
+	est.push(afd.estados[i].simbolo);
 }
+console.log(`Estados: [${est.join(", ")}]`);
 console.log(`Alfabeto: [${afd.alfabeto.join(", ")}]`);
 console.log(`Inicial: ${afd.inicial}`);
 console.log(`Estados finales: [${afd.finales.join(", ")}]`);
