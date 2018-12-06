@@ -6,6 +6,8 @@
 char* concatenarStr(char* cad1, char* cad2, int tam);
 char* voltearStr(char* cadena, int tam);
 int cadlen(char* cad);
+void calcPrefSuf(char* resta, int restaLen, int lps[]);
+int kmp(char* original, char* resta);
 %}
 
 %union{
@@ -29,6 +31,10 @@ int cadlen(char* cad);
 %token TOK_MOD
 %token TOK_POW
 %token TOK_COMA
+%token TOK_T_STR
+%token TOK_T_INT
+%token TOK_T_DBL
+%token TOK_VAR
 
 %left TOK_ASIGN
 %left TOK_SUMA TOK_RESTA
@@ -49,6 +55,9 @@ input:
 line: TOK_LF
     | expE TOK_LF { printf("\tResultado: %d\n", $1); }
     | expD TOK_LF { printf("\tResultado: %f\n", $1); }
+    | TOK_T_STR TOK_VAR TOK_PC TOK_LF { printf("VARIABLES STRING\n"); }
+    | TOK_T_INT TOK_VAR TOK_PC TOK_LF { printf("VARIABLES INT\n"); }
+    | TOK_T_DBL TOK_VAR TOK_PC TOK_LF { printf("VARIABLES DOUBLE\n"); }
     | concatenacion TOK_LF { printf("\tResultado: %s\n", $1); }
     ;
 
@@ -73,20 +82,6 @@ concatenacion: TOK_CADENA { $$ = $1; }
         char* cad = concatenarStr($1, $3, nuevaLen);
         $$ = cad;
     }
-    | concatenacion TOK_SUMA expE {
-        char numcad[21];
-        sprintf(numcad, "%d", $3);
-        int nuevaLen = cadlen($1)+cadlen(numcad) + 1;
-        char* cad = concatenarStr($1, numcad, nuevaLen);
-        $$ = cad;
-    }
-    | expE TOK_SUMA concatenacion {
-        char numcad[21];
-        sprintf(numcad, "%d", $1);
-        int nuevaLen = cadlen($3)+cadlen(numcad) + 1;
-        char* cad = concatenarStr(numcad, $3, nuevaLen);
-        $$ = cad;
-    }
     | expE TOK_EXP concatenacion {
         int nuevaLen = cadlen($3)*$1 + 1;
         char* original = $3;
@@ -101,6 +96,10 @@ concatenacion: TOK_CADENA { $$ = $1; }
         $$ = cad;
     }
     | concatenacion TOK_EXP expE {
+        if($3 == 0){
+            $$ = "";
+            break;
+        }
         int entero = ($3 < 0 ? -$3 : $3);
         int nuevaLen = cadlen($1)*entero + 1;
         char* original = $1;
@@ -117,6 +116,33 @@ concatenacion: TOK_CADENA { $$ = $1; }
         }
 
         $$ = cad;
+    }
+    | concatenacion TOK_RESTA concatenacion {
+        int match = kmp($1, $3);
+        char* res;
+        if(match != -1){
+            int len = cadlen($1) - cadlen($3);
+            int i = 0, j = 0;
+            res = malloc(len);
+            while(i < len){
+                if(i != match){
+                    res[i] = $1[j];
+                }
+                else{
+                    j += cadlen($3);
+                    res[i] = $1[j];
+                }
+                ++i;
+                ++j;
+            }
+
+            //Se devuelve la resta
+            $$ = res;
+        }else{
+            //No hay match, devuelve vacío
+            $$ = "";
+        }
+
     }
     ;
 
@@ -155,6 +181,7 @@ int yywrap() {
 
 void yyerror(const char *s){
 	printf("Error: %s\n", s);
+    yyparse();
 }
 
 int cadlen(char* cad){
@@ -199,4 +226,55 @@ char* voltearStr(char* cadena, int tam){
     }
 
     return volteada;
+}
+
+int kmp(char* original, char* resta) { 
+    int restaLen = cadlen(resta);
+    int originalLen = cadlen(original);
+
+    int lps[restaLen];
+    int j = 0;
+
+    calcPrefSuf(resta, restaLen, lps); 
+
+    int i = 0;
+    while (i < originalLen) { 
+        if (resta[j] == original[i]) { 
+            j++; 
+            i++; 
+        } 
+        if (j == restaLen) { 
+            return (i - j);
+        }
+        else if (i < originalLen && resta[j] != original[i]) { 
+            if (j != 0) 
+                j = lps[j - 1]; 
+            else
+                i = i + 1; 
+        }
+    }
+    return -1;
+}
+
+void calcPrefSuf(char* resta, int restaLen, int lps[]) { 
+    int len = 0; 
+    int i = 1; 
+    lps[0] = 0;
+
+    while (i < restaLen) { 
+        if (resta[i] == resta[len]) { 
+            len++; 
+            lps[i] = len; 
+            i++; 
+        } 
+        else{ 
+            if (len != 0) { 
+                len = lps[len - 1]; 
+            } 
+            else{ 
+                lps[i] = len; 
+                i++; 
+            } 
+        } 
+    } 
 }

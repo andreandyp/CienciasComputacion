@@ -8,6 +8,10 @@ digito [0-9]
 decimal {digito}*\.{digito}+
 entero {digito}+
 potencia pow
+t_string string
+t_int int
+t_double double
+var [a-zA-Z][a-zA-Z0-9]+
 cadena \"[^\"]*\"
 %%
 
@@ -98,4 +102,22 @@ cadena \"[^\"]*\"
 	return TOK_POW;
 }
 
+{t_string} {
+	printf("tipo de dato string\n");
+	return TOK_T_STR;
+}
+
+{t_int} {
+	printf("tipo de dato int\n");
+	return TOK_T_INT;
+}
+
+{t_double} {
+	printf("tipo de dato double\n");
+	return TOK_T_DBL;
+}
+{var} {
+	printf("Variable\n");
+	return TOK_VAR;
+}
 .	;
