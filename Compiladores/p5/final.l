@@ -8,6 +8,7 @@ digito [0-9]
 decimal {digito}*\.{digito}+
 entero {digito}+
 potencia pow
+palabra if
 t_string string
 t_int int
 t_double double
@@ -82,10 +83,6 @@ cadena \"[^\"]*\"
 	return TOK_PDER;
 }
 
-\= {
-	printf("Asignar\n");
-	return TOK_ASIGN;
-}
 
 \; {
 	printf("Punto y coma\n");
@@ -116,8 +113,39 @@ cadena \"[^\"]*\"
 	printf("tipo de dato double\n");
 	return TOK_T_DBL;
 }
+{palabra} {
+	printf("Booleana\n");
+	return TOK_IF;
+}
 {var} {
-	printf("Variable\n");
+	char* cadena = malloc(cadlen(yytext));
+	int i = 0;
+	while(yytext[i]){
+		cadena[i] = yytext[i];
+		i++;
+	}
+	cadena[i] = '\0';
+	yylval.variable = cadena;
 	return TOK_VAR;
+}
+\< {
+	printf("<\n");
+	return TOK_LT;
+}
+\<\= {
+	printf("<=\n");
+	return TOK_LTE;
+}
+\> {
+	printf(">\n");
+	return TOK_GT;
+}
+\>\= {
+	printf(">=\n");
+	return TOK_GTE;
+}
+\=\= {
+	printf("==\n");
+	return TOK_CMP;
 }
 .	;

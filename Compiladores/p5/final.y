@@ -8,16 +8,25 @@ char* voltearStr(char* cadena, int tam);
 int cadlen(char* cad);
 void calcPrefSuf(char* resta, int restaLen, int lps[]);
 int kmp(char* original, char* resta);
+int compararCad(char* c1, char* c2);
+
+char *variables[100];
+char tablaSimbolos[100][2];
+int NVARS = 0;
+
 %}
 
 %union{
 	int entero;
     double decimal;
     char* cadena;
+    char* variable;
+    char* booleana;
 }
 %token <entero> TOK_ENTERO
 %token <decimal> TOK_DECIMAL
 %token <cadena> TOK_CADENA
+%token <variable> TOK_VAR
 %token TOK_SUMA
 %token TOK_RESTA
 %token TOK_MULTI
@@ -27,14 +36,18 @@ int kmp(char* original, char* resta);
 %token TOK_PIZQ
 %token TOK_PDER
 %token TOK_PC
-%token TOK_ASIGN
 %token TOK_MOD
 %token TOK_POW
 %token TOK_COMA
 %token TOK_T_STR
 %token TOK_T_INT
 %token TOK_T_DBL
-%token TOK_VAR
+%token TOK_IF
+%token TOK_LT
+%token TOK_LTE
+%token TOK_GT
+%token TOK_GTE
+%token TOK_CMP
 
 %left TOK_ASIGN
 %left TOK_SUMA TOK_RESTA
@@ -45,7 +58,7 @@ int kmp(char* original, char* resta);
 %type <entero> expE
 %type <decimal> expD
 %type <cadena> concatenacion
-
+%type <booleana> expbool
 
 %%
 input:
@@ -55,10 +68,35 @@ input:
 line: TOK_LF
     | expE TOK_LF { printf("\tResultado: %d\n", $1); }
     | expD TOK_LF { printf("\tResultado: %f\n", $1); }
-    | TOK_T_STR TOK_VAR TOK_PC TOK_LF { printf("VARIABLES STRING\n"); }
-    | TOK_T_INT TOK_VAR TOK_PC TOK_LF { printf("VARIABLES INT\n"); }
-    | TOK_T_DBL TOK_VAR TOK_PC TOK_LF { printf("VARIABLES DOUBLE\n"); }
     | concatenacion TOK_LF { printf("\tResultado: %s\n", $1); }
+    | expbool TOK_LF { printf("\tResultado: %s\n", $1); }
+
+    ;
+
+
+expbool: TOK_IF TOK_PIZQ expE TOK_GT expE TOK_PDER { $$ = ($3 > $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_LT expE TOK_PDER { $$ = ($3 < $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_GTE expE TOK_PDER { $$ = ($3 >= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_LTE expE TOK_PDER { $$ = ($3 <= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_CMP expE TOK_PDER { $$ = ($3 == $5) ? "true" : "false"; }
+
+    | TOK_IF TOK_PIZQ expD TOK_GT expE TOK_PDER { $$ = ($3 > $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_LT expE TOK_PDER { $$ = ($3 < $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_GTE expE TOK_PDER { $$ = ($3 >= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_LTE expE TOK_PDER { $$ = ($3 <= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_CMP expE TOK_PDER { $$ = ($3 == $5) ? "true" : "false"; }
+
+    | TOK_IF TOK_PIZQ expD TOK_GT expD TOK_PDER { $$ = ($3 > $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_LT expD TOK_PDER { $$ = ($3 < $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_GTE expD TOK_PDER { $$ = ($3 >= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_LTE expD TOK_PDER { $$ = ($3 <= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expD TOK_CMP expD TOK_PDER { $$ = ($3 == $5) ? "true" : "false"; }
+
+    | TOK_IF TOK_PIZQ expE TOK_GT expD TOK_PDER { $$ = ($3 > $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_LT expD TOK_PDER { $$ = ($3 < $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_GTE expD TOK_PDER { $$ = ($3 >= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_LTE expD TOK_PDER { $$ = ($3 <= $5) ? "true" : "false"; }
+    | TOK_IF TOK_PIZQ expE TOK_CMP expD TOK_PDER { $$ = ($3 == $5) ? "true" : "false"; }
     ;
 
 expE: TOK_ENTERO { $$ = $1; }
@@ -277,4 +315,14 @@ void calcPrefSuf(char* resta, int restaLen, int lps[]) {
             } 
         } 
     } 
+}
+
+int compararCad(char* c1, char* c2){
+    for(int i = 0; i < cadlen(c1); i++){
+        if(c1[i] != c2[i]){
+            return 0;
+        }
+    }
+
+    return 1;
 }

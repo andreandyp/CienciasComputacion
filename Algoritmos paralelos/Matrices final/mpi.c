@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <mpi.h>
-#define N 10
+#define N 1000
 
 int matriz1[N][N];
 int matriz2[N][N];
@@ -20,8 +20,8 @@ int main(int argc, char *argv[]){
     printf("Llenando matrices...\n");
     for (int i = 0; i < N; ++i){
         for (int j = 0; j < N; ++j) {
-            matriz1[i][j] = rand()%8 + 1;
-            matriz2[i][j] = rand()%8 + 1;
+            matriz1[i][j] = rand()%4 + 1;
+            matriz2[i][j] = rand()%4 + 1;
         }
     }
 
