@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <mpi.h>
-#define N 1000
+#define N 2
 
 int matriz1[N][N];
 int matriz2[N][N];
@@ -20,10 +20,24 @@ int main(int argc, char *argv[]){
     printf("Llenando matrices...\n");
     for (int i = 0; i < N; ++i){
         for (int j = 0; j < N; ++j) {
-            matriz1[i][j] = rand()%4 + 1;
-            matriz2[i][j] = rand()%4 + 1;
+            matriz1[i][j] = rand()%2 + 1;
+            matriz2[i][j] = rand()%2 + 1;
         }
     }
+    if(pid == 0){
+        for (int i = 0; i < N; ++i){
+            for (int j = 0; j < N; ++j) {
+                printf("%d\t", matriz1[i][j]);
+            }
+
+            printf("|\t");
+            for (int j = 0; j < N; ++j) {
+                printf("%d\t", matriz2[i][j]);
+            }
+            printf("\n");
+        }
+    }
+    
 
     int i = 0;
     printf("Enviando a subprocesos...\n");
@@ -63,7 +77,12 @@ int main(int argc, char *argv[]){
 
     MPI_Barrier(MPI_COMM_WORLD);
     if (pid == 0){
-        printf("Tiempo: %lf\n", fin - inicio);
+        for (int i = 0; i < N; ++i){
+            for (int j = 0; j < N; ++j) {
+                printf("%d\t", resultado[i][j]);
+            }
+            printf("\n");
+        }
     }
 
     MPI_Finalize();
