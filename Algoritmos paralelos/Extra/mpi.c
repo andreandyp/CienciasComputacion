@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#define N 10
 
 int main(int argc, char *argv[]){
 	int procesos;
@@ -8,23 +9,105 @@ int main(int argc, char *argv[]){
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
 	MPI_Comm_size(MPI_COMM_WORLD, &procesos);
-	int datoGlobal = 0;
-	int datoLocal;
+
+	int* matriz1 = malloc(N * N * sizeof(int));
+	int* matriz2t = malloc(N * N * sizeof(int));
+	int* matrizRes = NULL;
+	int* matrizFinal = NULL;
 
 	if(pid == 0){
-		printf("Proceso maestro\n");
-		printf("Llenando matrices...\n");
-		for(int i = 1; i < procesos; i++){
-			datoGlobal = i;
-			MPI_Send(&datoGlobal, 1, MPI_INT, i, 24, MPI_COMM_WORLD);
-		}
-	    
+		matrizRes = malloc(N * sizeof(int));
+		matrizFinal = malloc(N * N * sizeof(int));
+		int* matriz2 = malloc(N * N * sizeof(int));
+		
+		
+		for (int i = 0; i < N * N; ++i){
+	        matriz1[i] = rand()%2 + 1;
+	        matriz2[i] = rand()%2 + 1;
+	    }
+
+	    int k = 0;
+	    for(int i = 0; i < N; i++){
+	    	for (int j = 0; j < N * N; j += N){
+	    		matriz2t[k] = matriz2[i+j];
+	    		++k;
+	    	}
+	    }
+
+	    for (int i = 0; i < N * N; ++i){
+			printf("%d\t", matriz1[i]);
+			if((i+1)%N == 0){
+				printf("\n");
+			}
+	    }
+
+	    printf("-----\n");
+
+	    for (int i = 0; i < N * N; ++i){
+			printf("%d\t", matriz2[i]);
+			if((i+1)%N == 0){
+				printf("\n");
+			}
+			
+	    }
+
+	    free(matriz2);
+
 	}
-	else{
-		MPI_Status status;
-		MPI_Recv(&datoLocal, 1, MPI_INT, 0, 24, MPI_COMM_WORLD, &status);
-		printf("Proceso hijo %d\nDato local %d\n", pid, datoLocal);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	
+    int* submatriz1 = malloc(N * sizeof(int));
+	MPI_Scatter(matriz1, N, MPI_INT,
+				submatriz1, N, MPI_INT,
+				0, MPI_COMM_WORLD);
+
+	MPI_Bcast(
+    	matriz2t,
+    	N*N,
+    	MPI_INT,
+    	0,
+    	MPI_COMM_WORLD);
+
+	double inicio = MPI_Wtime();
+	for(int i = 0, l = 0; i < N * N; i+= N, ++l){
+        int tmp = 0;
+        for(int j = 0; j < N; j++){
+            tmp += matriz2t[j+i] * submatriz1[j];
+        }
+        
+        MPI_Gather(&tmp, 1, MPI_INT,
+		    matrizRes, 1, MPI_INT,
+		    0, MPI_COMM_WORLD);
+
+        if(pid == 0){
+        	for(int k = 0, n = 0; k < N; k++, n += N){
+        		matrizFinal[l+n] = matrizRes[k];
+        	}
+        }
+		
+    }
+    double fin = MPI_Wtime();
+
+    free(matriz1);
+    free(matriz2t);
+    free(matrizRes);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+	if(pid == 0){
+		printf("-----\n");
+		for (int i = 0; i < N * N; ++i){
+			printf("%d\t", matrizFinal[i]);
+			if((i+1)%N == 0){
+				printf("\n");
+			}
+	    }
+
+	    printf("Tiempo: %f\n", fin - inicio);
 	}
+
+	free(matrizFinal);
 
 	MPI_Finalize();
 	return 0;
