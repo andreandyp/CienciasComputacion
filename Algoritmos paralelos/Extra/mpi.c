@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
-#define N 10
+#include <time.h>
+#define N 4
 
 int main(int argc, char *argv[]){
+	srand(time(NULL));
 	int procesos;
 	int pid;
 	MPI_Init(&argc, &argv);
@@ -58,9 +60,52 @@ int main(int argc, char *argv[]){
 	MPI_Barrier(MPI_COMM_WORLD);
 	
     int* submatriz1 = malloc(N * sizeof(int));
-	MPI_Scatter(matriz1, N, MPI_INT,
+    if(N <= procesos){
+    	MPI_Scatter(matriz1, N, MPI_INT,
 				submatriz1, N, MPI_INT,
-				0, MPI_COMM_WORLD);
+				0, MPI_COMM_WORLD);	
+    }
+    else{
+    	int* matrizTemp = malloc(N*sizeof(int));
+    	if(pid == 0){
+    		for(int i = 0; i < N; i++){
+    			
+    			for(int j = N; j < N*N; j += N){
+    				for(int k = 0; k < N; k++){
+    					printf("...\n");
+    					matrizTemp[k] = matriz1[k+j];
+    					printf("__\n");
+    				}
+
+    			}
+				MPI_Send(
+				    matrizTemp,
+				    N,
+				    MPI_INT,
+				    i+1,
+				    555,
+				    MPI_COMM_WORLD);
+
+    		}
+    		for(int k = 0; k < N; k++){
+    			submatriz1[k] = matriz1[k];
+    		}
+
+    	}
+    	else{
+    		MPI_Status* hola;
+    		MPI_Recv(
+			    matrizTemp,
+			    N,
+			    MPI_INT,
+			    0,
+			    555,
+			    MPI_COMM_WORLD,
+			    hola);
+    		submatriz1 = matrizTemp;
+    	}
+    }
+	
 
 	MPI_Bcast(
     	matriz2t,
