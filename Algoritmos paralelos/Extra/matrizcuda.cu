@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define BLOCK_SIZE 4
+#define BLOCK_SIZE 6
 #define div_up(x, y) ( (y) * ( ((x)+(y)-1) / (y) ) )
 //Funcion multiplicacion de matric en memoria global (GM)
 __global__ void Multiplica_Matrices_GM(float *C, float *A, float *B, int nfilA, int ncolA, int nfilB, int ncolB)
@@ -15,7 +15,6 @@ __global__ void Multiplica_Matrices_GM(float *C, float *A, float *B, int nfilA, 
     {
         float sum=0.0f;
         for(int k=0; k < ncolA; k++){
-            printf("%f x %f\n", A[idy*ncolA+k], B[k*ncolB+idx]);
             sum+= A[idy*ncolA+k]*B[k*ncolB+idx];
         }
         C[index]=sum;
@@ -29,11 +28,11 @@ int main(int argc, char const *argv[])
     srand(time(NULL));
     float *A_h, *B_h,*C_h; //punteros a matrices en el Host
     float *A_d, *B_d, *C_d; //punteros a matrices en el Device
-    int nfilA = 3;
-    int ncolA = 2;
+    int nfilA = 2;
+    int ncolA = 3;
 
-    int nfilB = 2;
-    int ncolB = 3;
+    int nfilB = 3;
+    int ncolB = 2;
 
     
     cudaEvent_t start, stop;
@@ -59,7 +58,7 @@ int main(int argc, char const *argv[])
     }
 
     //Aquí se pueden ver las matrices
-    /*for(int i=0; i<nfilA; i++)
+    for(int i=0; i<nfilA; i++)
     {
         for(int j=0; j<ncolA; j++)
         {
@@ -80,7 +79,6 @@ int main(int argc, char const *argv[])
     }
 
     printf("--------\n");
-    */
     
     size_t sizeA = (nfilA * ncolA) * sizeof(float);
     size_t sizeB = (nfilB * ncolB) * sizeof(float);
@@ -89,7 +87,6 @@ int main(int argc, char const *argv[])
     cudaMalloc((void**) &A_d, sizeA);
     cudaMalloc((void**) &B_d, sizeB);
     cudaMalloc((void**) &C_d, sizeC);
-
     
     cudaMemcpy(A_d, A_h, sizeA, cudaMemcpyHostToDevice);
     cudaMemcpy(B_d, B_h, sizeB, cudaMemcpyHostToDevice);
@@ -104,7 +101,7 @@ int main(int argc, char const *argv[])
     cudaMemcpy(C_h, C_d, sizeC, cudaMemcpyDeviceToHost);
 
     //Aquí se puede ver el resultado de la multiplicación
-    /*printf("\n\n Matriz en cuda C: \n");
+    printf("\n\n Matriz en cuda C: \n");
     for(int i=0; i<nfilA; i++)
     {
         for(int j=0; j<ncolB; j++)
@@ -112,12 +109,12 @@ int main(int argc, char const *argv[])
             printf("%.2f\t", C_h[i*ncolB+j]);
         }
         printf("\n");
-    }*/
+    }
     
 
     free(A_h);
     free(B_h);
-    
+    free(C_h);
 
     cudaFree(A_d);
     cudaFree(B_d);
@@ -125,6 +122,8 @@ int main(int argc, char const *argv[])
 
     secs = (double)(t_fin - t_ini)/CLOCKS_PER_SEC;
     printf("%.16g milisegundos\n", secs*1000.0);
+
+    printf("%c", 0);
 
     return 0;
 }
